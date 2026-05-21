@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from agents import Agent, Runner
 import asyncio
 from enum import Enum
+from agents.guardrail import GuardrailFunctionOutput,input_guardrail
 
 router = APIRouter(prefix="/travel", tags=["Travel"])
 
@@ -38,7 +39,22 @@ class TravelPlannerOutput(BaseModel):
     itinerary: list[TravelPlannerDay]
     budget: list[BudgetOption]
 
+class ValidPlaceOutput(BaseModel):
+    is_valid_place: bool
 
+guardrail_agent = Agent( 
+    name="Place validation",
+    instructions="Check if the user is specifying a valid from and to location for travel.",
+    output_type=ValidPlaceOutput,
+    model="gpt-4o-mini"
+)
+
+@input_guardrail
+async def guardrail_valid_places(ctx, agent, input_data):
+    
+    result = await Runner.run(guardrail_agent, input_data, context=ctx.context)
+    is_valid_place = result.final_output.is_valid_place
+    return GuardrailFunctionOutput(output_info=result.final_output, tripwire_triggered= not is_valid_place)
 
 
 load_dotenv(override=True)
@@ -58,7 +74,8 @@ Also, suggest 3 different types of budget options in Indian Rupees for the itine
         name="Travel Planner Agent",
         instructions=instructions,  
         model = "gpt-5.4",
-        output_type= TravelPlannerOutput)
+        output_type= TravelPlannerOutput,
+        input_guardrails = [guardrail_valid_places])
         result  = await Runner.run(travel_agent,input)
         print(result.final_output)
         return TravelPlannerOutput.model_validate(result.final_output)
