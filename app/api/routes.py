@@ -73,7 +73,7 @@ Also, suggest 3 different types of budget options in Indian Rupees for the itine
         travel_agent = Agent(
         name="Travel Planner Agent",
         instructions=instructions,  
-        model = "gpt-5.4",
+        model = "gpt-4o-mini",
         output_type= TravelPlannerOutput,
         input_guardrails = [guardrail_valid_places])
         result  = await Runner.run(travel_agent,input)
