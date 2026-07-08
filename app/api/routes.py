@@ -64,16 +64,25 @@ load_dotenv(override=True)
 @router.post("/itinerary",response_model = TravelPlannerOutput)
 async def  generate_itinerary(request: ItineraryInput):
     try:
-        instructions = """
+        instructions = f"""
 You are a travel planner agent. Your task is to create a travel itinerary for the given destination and duration.
-The itinerary should include daily activities, places to visit, and any necessary travel arrangements. Also give asuitable user attractive title to the itinerary. 
-Also, suggest 3 different types of budget options in Indian Rupees for the itinerary - budget, mid-range and luxury. Each option should include the estimated cost for the entire trip and a breakdown of costs for accommodation, food, activities, and transportation.
+The itinerary should include daily activities, places to visit, any necessary travel arrangements and budget details. Also give asuitable user attractive title to the itinerary. 
+
+    Guidelines:
+      - Search for popular tourist attractions, local experiences, and hidden gems in the destination provided.
+      - If the destination is a country, suggest popular cities to visit within that country. If the destination is a city, suggest popular attractions and activities within that city.
+      - Prepare the plan for the given duration, ensuring a good balance of activities and relaxation time.
+      - For each activity, provide a brief description and the best time to visit.
+      - Include any necessary travel arrangements such as transportation between activities or to/from the airport.
+      - Also, suggest 3 different types of budget options in Indian rupees for the itinerary - budget, mid-range and luxury. Each option should include the estimated cost for the entire trip and a breakdown of costs for accommodation, food, activities, and transportation.
+      - While picking the different types of budget options, consider the cost of international/domestic flights, accommodation, food, activities, and transportation. 
+      
 """;
         input = f"Plan a trip to {request.destination} from {request.location},starting on {request.start_date} for a duration of {request.duration}."
         travel_agent = Agent(
         name="Travel Planner Agent",
         instructions=instructions,  
-        model = "gpt-4o-mini",
+        model = "gpt-5.4-mini",
         output_type= TravelPlannerOutput,
         input_guardrails = [guardrail_valid_places])
         result  = await Runner.run(travel_agent,input)
