@@ -1,3 +1,5 @@
+from sys import platform
+
 from fastapi import APIRouter,HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -95,7 +97,13 @@ The itinerary should include daily activities, places to visit, any necessary tr
 
 @router.get("/debug/openai-version")
 async def get_openai_version():
-    return {"openai_version": version("openai")}
+    return {
+        # "python": platform.python_version(),
+        "openai": version("openai"),
+        "openai_agents": version("openai-agents"),
+        "fastapi": version("fastapi"),
+        "pydantic": version("pydantic"),
+    }
     
 
 
