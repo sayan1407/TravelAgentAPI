@@ -82,7 +82,7 @@ The itinerary should include daily activities, places to visit, any necessary tr
         travel_agent = Agent(
         name="Travel Planner Agent",
         instructions=instructions,  
-        model = "gpt-5.4-mini",
+        model = "gpt-5.6-luna",
         output_type= TravelPlannerOutput,
         input_guardrails = [guardrail_valid_places])
         result  = await Runner.run(travel_agent,input)
