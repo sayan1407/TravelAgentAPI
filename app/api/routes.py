@@ -5,6 +5,7 @@ from agents import Agent, Runner
 import asyncio
 from enum import Enum
 from agents.guardrail import GuardrailFunctionOutput,input_guardrail
+from importlib.metadata import version
 
 router = APIRouter(prefix="/travel", tags=["Travel"])
 
@@ -92,6 +93,9 @@ The itinerary should include daily activities, places to visit, any necessary tr
         print(f"Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/debug/openai-version")
+async def get_openai_version():
+    return {"openai_version": version("openai")}
     
 
 
