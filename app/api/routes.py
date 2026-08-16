@@ -17,10 +17,10 @@ class BudgetType(str, Enum):
     luxury = "luxury"
 
 class BudgetBreakdown(BaseModel):
-    accommodation: int | str
-    food: int | str
-    activities: int | str
-    transportation: int | str
+    accommodation: int 
+    food: int
+    activities: int
+    transportation: int
 
 class BudgetOption(BaseModel):
     budget_type: BudgetType
