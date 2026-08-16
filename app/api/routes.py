@@ -24,7 +24,7 @@ class BudgetBreakdown(BaseModel):
 
 class BudgetOption(BaseModel):
     budget_type: BudgetType
-    estimate: int | str
+    estimate: int
     breakdown: BudgetBreakdown
 
 class ItineraryInput(BaseModel):
@@ -49,7 +49,7 @@ guardrail_agent = Agent(
     name="Place validation",
     instructions="Check if the user is specifying a valid from and to location for travel.",
     output_type=ValidPlaceOutput,
-    model="gpt-4o-mini"
+    model="gpt-5.4-mini"
 )
 
 @input_guardrail

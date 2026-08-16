@@ -1,0 +1,92 @@
+# ==========================================
+# FastAPI & Python Core Caches
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# ==========================================
+# Environment Variables & Secrets (CRITICAL)
+# ==========================================
+.env
+.env.*
+!.env.example
+secret_key*
+*.pem
+
+# ==========================================
+# Virtual Environments
+# ==========================================
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+
+# ==========================================
+# Database Files (Local Development)
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite3-journal
+
+# ==========================================
+# Dependency & Packaging Managers
+# ==========================================
+# Note: Keep poetry.lock, Pipfile.lock, or pdm.lock in git.
+# Only ignore directory targets below:
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ==========================================
+# Testing & Code Quality Caches
+# ==========================================
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# ==========================================
+# IDEs, Editors & OS Specific
+# ==========================================
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Logs & Process Managers
+# ==========================================
+*.log
+logs/
+pip-log.txt
+.env
