@@ -1,3 +1,4 @@
+import json
 from sys import platform
 
 from fastapi import APIRouter,HTTPException
@@ -45,6 +46,28 @@ class TravelPlannerOutput(BaseModel):
 class ValidPlaceOutput(BaseModel):
     is_valid_place: bool
 
+class ManageFlights(BaseModel):
+    date: str
+    from_location : str
+    from_location_airport_code : str
+    to_location : str
+    to_location_airport_code : str
+
+class ManageFlightsOutput(BaseModel):
+    flight_booking_required: bool
+    flight_details: list[ManageFlights]
+
+class TravelPlannerFinalOutput(BaseModel):
+    travelPlannerOutput : TravelPlannerOutput
+    manageFlightsOutput : ManageFlightsOutput
+
+# Custom Encoder
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj, '__dict__'):
+            return obj.__dict__
+        return super().default(obj)
+
 guardrail_agent = Agent( 
     name="Place validation",
     instructions="Check if the user is specifying a valid from and to location for travel.",
@@ -64,7 +87,7 @@ load_dotenv(override=True)
 
 
 
-@router.post("/itinerary",response_model = TravelPlannerOutput)
+@router.post("/itinerary",response_model = TravelPlannerFinalOutput)
 async def  generate_itinerary(request: ItineraryInput):
     try:
         instructions = f"""
@@ -88,9 +111,24 @@ The itinerary should include daily activities, places to visit, any necessary tr
         model = "gpt-5.6-luna",
         output_type= TravelPlannerOutput,
         input_guardrails = [guardrail_valid_places])
-        result  = await Runner.run(travel_agent,input)
-        print(result.final_output)
-        return TravelPlannerOutput.model_validate(result.final_output)
+        itinerary_result  = await Runner.run(travel_agent,input)
+        print(itinerary_result.final_output)
+        instruction_flight_manage = """
+      You will be provided with a travel itinerary plan with date and activity details. 
+      Your task is to find out at which date from which location to which location flight needs to be booked in the entire plan. Only mention the city names in from and to locations.
+      If the no flight booking is required in the entire journey make the flight_booking_required false and return an empty list for flight_details.
+""";
+        flight_manage_agent = Agent(
+           name="Flight Management Agent",
+           model = 'gpt-5.6-luna',
+           instructions=instruction_flight_manage,
+           output_type= ManageFlightsOutput
+        )
+        flight_manage_result = await Runner.run(flight_manage_agent,json.dumps(itinerary_result.final_output,cls=CustomEncoder, indent=4))    
+        return TravelPlannerFinalOutput(
+            travelPlannerOutput=TravelPlannerOutput.model_validate(itinerary_result.final_output),
+            manageFlightsOutput=ManageFlightsOutput.model_validate(flight_manage_result.final_output)
+        )
     except Exception as e:
         print(f"Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
