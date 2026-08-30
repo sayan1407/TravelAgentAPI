@@ -53,13 +53,23 @@ class ManageFlights(BaseModel):
     to_location : str
     to_location_airport_code : str
 
+class ManageHotels(BaseModel):
+    from_date: str
+    to_date: str
+    location : str
+
 class ManageFlightsOutput(BaseModel):
     flight_booking_required: bool
     flight_details: list[ManageFlights]
 
+class ManageHotelsOutput(BaseModel):
+    hotel_booking_required: bool
+    hotel_details: list[ManageHotels]
+
 class TravelPlannerFinalOutput(BaseModel):
     travelPlannerOutput : TravelPlannerOutput
     manageFlightsOutput : ManageFlightsOutput
+    manageHotelsOutput : ManageHotelsOutput
 
 # Custom Encoder
 class CustomEncoder(json.JSONEncoder):
@@ -116,7 +126,7 @@ The itinerary should include daily activities, places to visit, any necessary tr
         instruction_flight_manage = """
       You will be provided with a travel itinerary plan with date and activity details. 
       Your task is to find out at which date from which location to which location flight needs to be booked in the entire plan. Only mention the city names in from and to locations.
-      If the no flight booking is required in the entire journey make the flight_booking_required false and return an empty list for flight_details.
+      If  no flight booking is required in the entire journey make the flight_booking_required false and return an empty list for flight_details.
 """;
         flight_manage_agent = Agent(
            name="Flight Management Agent",
@@ -124,10 +134,23 @@ The itinerary should include daily activities, places to visit, any necessary tr
            instructions=instruction_flight_manage,
            output_type= ManageFlightsOutput
         )
-        flight_manage_result = await Runner.run(flight_manage_agent,json.dumps(itinerary_result.final_output,cls=CustomEncoder, indent=4))    
+        flight_manage_result = await Runner.run(flight_manage_agent,json.dumps(itinerary_result.final_output,cls=CustomEncoder, indent=4))
+        instruction_hotel_manage = """
+              You will be provided with a travel itinerary plan with date and activity details. 
+              Your task is to find out from which date to which date at which location hotels needs to be booked in the entire plan.
+              If  no hotel booking is required in the entire journey make the hotel_booking_required false and return an empty list for hotel_details.
+        """;
+        hotel_manage_agent = Agent(
+            name="Hotel Management Agent",
+            model = 'gpt-5.6-luna',
+            instructions=instruction_hotel_manage,
+            output_type= ManageHotelsOutput
+        )
+        hotel_manage_result = await Runner.run(hotel_manage_agent,json.dumps(itinerary_result.final_output,cls=CustomEncoder, indent=4))
         return TravelPlannerFinalOutput(
             travelPlannerOutput=TravelPlannerOutput.model_validate(itinerary_result.final_output),
-            manageFlightsOutput=ManageFlightsOutput.model_validate(flight_manage_result.final_output)
+            manageFlightsOutput=ManageFlightsOutput.model_validate(flight_manage_result.final_output),
+            manageHotelsOutput=ManageHotelsOutput.model_validate(hotel_manage_result.final_output)
         )
     except Exception as e:
         print(f"Error in chat endpoint: {str(e)}")
