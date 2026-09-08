@@ -1,4 +1,5 @@
 import json
+import time
 from sys import platform
 
 from fastapi import APIRouter,HTTPException
@@ -99,6 +100,7 @@ load_dotenv(override=True)
 
 @router.post("/itinerary",response_model = TravelPlannerFinalOutput)
 async def  generate_itinerary(request: ItineraryInput):
+    start_time = time.perf_counter()
     try:
         instructions = f"""
 You are a travel planner agent. Your task is to create a travel itinerary for the given destination and duration.
@@ -134,7 +136,7 @@ The itinerary should include daily activities, places to visit, any necessary tr
            instructions=instruction_flight_manage,
            output_type= ManageFlightsOutput
         )
-        flight_manage_result = await Runner.run(flight_manage_agent,json.dumps(itinerary_result.final_output,cls=CustomEncoder, indent=4))
+        flight_manage_task = Runner.run(flight_manage_agent,json.dumps(itinerary_result.final_output,cls=CustomEncoder, indent=4))
         instruction_hotel_manage = """
               You will be provided with a travel itinerary plan with date and activity details. 
               Your task is to find out from which date to which date at which location hotels needs to be booked in the entire plan.
@@ -146,7 +148,8 @@ The itinerary should include daily activities, places to visit, any necessary tr
             instructions=instruction_hotel_manage,
             output_type= ManageHotelsOutput
         )
-        hotel_manage_result = await Runner.run(hotel_manage_agent,json.dumps(itinerary_result.final_output,cls=CustomEncoder, indent=4))
+        hotel_manage_task = Runner.run(hotel_manage_agent,json.dumps(itinerary_result.final_output,cls=CustomEncoder, indent=4))
+        flight_manage_result, hotel_manage_result = await asyncio.gather(flight_manage_task, hotel_manage_task)
         return TravelPlannerFinalOutput(
             travelPlannerOutput=TravelPlannerOutput.model_validate(itinerary_result.final_output),
             manageFlightsOutput=ManageFlightsOutput.model_validate(flight_manage_result.final_output),
@@ -155,6 +158,9 @@ The itinerary should include daily activities, places to visit, any necessary tr
     except Exception as e:
         print(f"Error in chat endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        elapsed_time = time.perf_counter() - start_time
+        print(f"/travel/itinerary response time: {elapsed_time:.3f}s")
 
 @router.get("/debug/openai-version")
 async def get_openai_version():
